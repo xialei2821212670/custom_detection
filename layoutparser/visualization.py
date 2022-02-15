@@ -257,6 +257,129 @@ def draw_box(
 
     return canvas, visualization_res
 
+@image_loader
+def draw_box_show(
+        canvas,
+        layout,
+        box_width=None,
+        color_map=None,
+        show_element_id=False,
+        show_element_type=False,
+        id_font_size=None,
+        id_font_path=None,
+        id_text_color=None,
+        id_text_background_color=None,
+):
+    """Draw the layout region on the input canvas(image).
+
+      Args:
+          canvas (:obj:`~np.ndarray` or :obj:`~PIL.Image.Image`):
+              The canvas to draw the layout boxes.
+          layout (:obj:`Layout` or :obj:`list`):
+              The layout of the canvas to show.
+          box_width (:obj:`int`, optional):
+              Set to change the width of the drawn layout box boundary.
+              Defaults to None, when the boundary is automatically
+              calculated as the the :const:`DEFAULT_BOX_WIDTH_RATIO`
+              * the maximum of (height, width) of the canvas.
+          color_map (dict, optional):
+              A map from `block.type` to the colors, e.g., `{1: 'red'}`.
+              You can set it to `{}` to use only the
+              :const:`DEFAULT_OUTLINE_COLOR` for the outlines.
+              Defaults to None, when a color palette is is automatically
+              created based on the input layout.
+          show_element_id (bool, optional):
+              Whether to display `block.id` on the top-left corner of
+              the block.
+              Defaults to False.
+          show_element_id (bool, optional):
+              Whether to display `block.type` on the top-left corner of
+              the block.
+              Defaults to False.
+          id_font_size (int, optional):
+              Set to change the font size used for drawing `block.id`.
+              Defaults to None, when the size is set to
+              :const:`DEFAULT_FONT_SIZE`.
+          id_font_path (:obj:`str`, optional):
+              Set to change the font used for drawing `block.id`.
+              Defaults to None, when the :const:`DEFAULT_FONT_OBJECT` is used.
+          id_text_color (:obj:`str`, optional):
+              Set to change the text color used for drawing `block.id`.
+              Defaults to None, when the color is set to
+              :const:`DEFAULT_TEXT_COLOR`.
+          id_text_background_color (:obj:`str`, optional):
+              Set to change the text region background used for drawing `block.id`.
+              Defaults to None, when the color is set to
+              :const:`DEFAULT_TEXT_BACKGROUND`.
+      Returns:
+          :obj:`PIL.Image.Image`:
+              A Image object containing the `layout` draw upon the input `canvas`.
+      """
+
+    draw = ImageDraw.Draw(canvas)
+
+    if box_width is None:
+        box_width = _calculate_default_box_width(canvas)
+
+    if show_element_id or show_element_type:
+        font_obj = _create_font_object(id_font_size, id_font_path)
+
+    if color_map is None:
+        all_types = set([b.type for b in layout if hasattr(b, "type")])
+        color_map = _create_color_palette(all_types)
+
+    for idx, ele in enumerate(layout):
+
+        if isinstance(ele, Interval):
+            ele = ele.put_on_canvas(canvas)
+
+        outline_color = (
+            DEFAULT_OUTLINE_COLOR
+            if not isinstance(ele, TextBlock)
+            else color_map.get(ele.type, DEFAULT_OUTLINE_COLOR)
+        )
+
+        if not isinstance(ele, Quadrilateral):
+            draw.rectangle(ele.coordinates, width=box_width, outline=outline_color)
+
+        else:
+            p = ele.points.ravel().tolist()
+            draw.line(p + p[:2], width=box_width, fill=outline_color)
+
+        if show_element_id or show_element_type:
+            text = ""
+            if show_element_id:
+                ele_id = ele.id or idx
+                text += str(ele_id)
+            if show_element_type:
+                text = str(ele.type) if not text else text + ": " + str(ele.type)
+
+            start_x, start_y = ele.coordinates[:2]
+            text_w, text_h = font_obj.getsize(text)
+
+            # Add a small background for the text
+            draw.rectangle(
+                (start_x, start_y, start_x + text_w, start_y + text_h),
+                fill=id_text_background_color or DEFAULT_TEXT_BACKGROUND,
+            )
+
+            # Draw the ids
+            draw.text(
+                (start_x, start_y),
+                text,
+                fill=id_text_color or DEFAULT_TEXT_COLOR,
+                font=font_obj,
+            )
+
+    return canvas
+
+
+
+
+
+
+
+
 
 @image_loader
 def draw_text(
