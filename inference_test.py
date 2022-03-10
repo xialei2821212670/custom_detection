@@ -16,7 +16,7 @@ from serving.module import OCRSystem
 # import visualization as lp
 
 
-image = cv2.imread(r'C:\Users\admin\Desktop\0084.jpg')
+image = cv2.imread(r'C:\Users\admin\Desktop\99_199-2001-1-003-0100_.jpg')
 image = image[..., ::-1]
 
 # load model
@@ -52,7 +52,7 @@ show_img.show()  #展示全部检测结果
 
 # show_img.show()
 
-text_blocks = lp.Layout([b for b in layout if b.type == 'header'])
+text_blocks = lp.Layout([b for b in layout if b.type == 'straight_matter'])
 figure_blocks = lp.Layout([b for b in layout if b.type == 'date'])
 
 # text areas may be detected within the image area, delete these areas
