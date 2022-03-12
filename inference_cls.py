@@ -38,8 +38,17 @@ def read_directory(directory_name):
 #
 # ]
 
-@app.post('/Layout_image', summary='ocr')
-async def Layout_ocr_api(file: UploadFile = File(...)):
-    image_path = read_directory()
-    res = ocr.predict(paths=image_path)
-    print(res)
+@app.post('/dection_inverted', summary='ocr')
+async def dection_inverted(item: Item):
+    all_res=[]
+    for i in item.file_list:
+        image_path = read_directory(i)
+        res = ocr.predict(paths=image_path)
+        all_res.append(res)
+    print(all_res)
+
+    return {"code": 0, "result": all_res}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, debug=True, host='127.0.0.1')

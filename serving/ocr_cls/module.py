@@ -100,21 +100,23 @@ class OCRCls(hub.Module):
             if img is None:
                 continue
             img_list.append(img)
-
         rec_res_final = []
         try:
             img_list, cls_res, predict_time = self.text_classifier(img_list)
+
             for dno in range(len(cls_res)):
+                # print("paths[dno]", paths[dno])
                 angle, score = cls_res[dno]
                 rec_res_final.append({
                     'angle': angle,
                     'confidence': float(score),
+                    'path':paths[dno]
                 })
         except Exception as e:
             print(e)
             return [[]]
 
-        return [rec_res_final]
+        return rec_res_final
 
     # @serving
     # def serving_method(self, images, **kwargs):
